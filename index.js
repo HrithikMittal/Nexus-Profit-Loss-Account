@@ -42,9 +42,6 @@ MongoClient.connect(url, (err, db) => {
   });
 
   router.route("/trans").post(function(req, res) {
-    var casht = new Details();
-    casht.toname = req.body.toname;
-    casht.fromname = req.body.fromname;
     var sumc = 0;
     var sumd = 0;
     var flag = 0;
@@ -59,40 +56,52 @@ MongoClient.connect(url, (err, db) => {
         }
       });
 
+    console.log(sumc);
+
+    console.log(sumd);
     dbo
       .collection("pnl")
       .find({})
       .toArray(function(err, result) {
         for (i = 0; i < result.length; i++) {
-          if (result[i].id == 1) {
+          if (result[i].unid == 1) {
+            console.log(sumc);
+
+            console.log(sumd);
             flag = 1;
           }
         }
+
+        if (flag == 1) {
+          myalr = {
+            unid: 1
+          };
+          mynew = {
+            unid: 1,
+            creditamount: sumc,
+            debitamount: sumd
+          };
+          dbo.collection("pnl").updateOne(myalr, {
+            $set: mynew
+          });
+        }
+        if (flag == 0) {
+          myobj = {
+            unid: 1,
+            creditamount: sumc,
+            debitamount: sumd
+          };
+          dbo.collection("pnl").insertOne(myobj, function(err, res) {
+            if (err) throw err;
+            console.log("1 document inserted");
+          });
+        }
       });
-    if (flag == 1) {
-      myalr = {
-        id: 1
-      };
-      mynew = {
-        id: 1,
-        creditamount: sumc,
-        debitamount: sumd
-      };
-      dbo.collection("pnl").updateOne(myalr, {
-        $set: mynew
-      });
-    }
-    if (flag == 0) {
-      myobj = {
-        id: 1,
-        creditamount: sumc,
-        debitamount: sumd
-      };
-      dbo.collection("pnl").insertOne(myobj, function(err, res) {
-        if (err) throw err;
-        console.log("1 document inserted");
-      });
-    }
     res.send("All things are set");
   });
 });
+// Fire up server
+app.listen(port);
+
+// print friendly message to console
+console.log("Server listening on port " + port);
